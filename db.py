@@ -45,10 +45,10 @@ class Image(Base):
     """Class which describes table in database of the Image
     :param id:int: Image unique id in DB
     :param picture_name: str: name of the picture which is putting in DB
-    :param created_at: date: the date of the picture creation date- format: YYYY-MM-DD where Y-means year, M - means month and D- means day
-    :param updated_at: date: the date of the picture updating date- format: YYYY-MM-DD where Y-means year, M - means month and D- means day
+    :param created_at: date: the date of the picture creation - format: YYYY-MM-DD where Y-means year, M - means month and D- means day
+    :param updated_at: date: the date of the picture updating - format: YYYY-MM-DD where Y-means year, M - means month and D- means day
     :param tag: str: tag
-    :param comment: str: short comment about the image which is putting in DB
+    :param comment: str: comment about the image which is putting in DB
     :param user_id: int: Id number of the user who entered the given person into the DB
     """
     __tablename__ = "images"
