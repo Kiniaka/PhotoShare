@@ -47,7 +47,7 @@ class Image(Base):
     :param image_link: link to the image
     :param created_at: date: the date of the image creation - format: YYYY-MM-DD HH:MM:SS where Y-means year, M - means month, D- means day H - means hour, M - means minutes and S - means secunds
     :param update_at: date: the date of the image updating - format: YYYY-MM-DD HH:MM:SS where Y-means year, M - means month, D- means day H - means hour, M - means minutes and S - means secunds
-    :param user_id: int: Id number of the user who entered the given person into the DB
+    :param user_id: int: Id number of the user who entered the image into the DB
     :param tags: tags about the image which is putting in DB. Relation 'mamy to many' - many tags to one images and one tag to many images.
     :param note: the comment about the image which is putting in DB. Relation 'many to one' - many comments to one image.  
     """
@@ -65,17 +65,19 @@ class Image(Base):
 class Note(Base):
     """Class which describes table in database of the Comment
     :param id:int: note's unique id in DB
-    :param description: str: comment of the image
+    :param note_description: str: comment of the image
     :param created_at: datetime: comment creation date
     :param updated_at: datetime: comment update date
+    :param user_id: int: Id number of the user who entered the note into the DB
     :param done: information whether comment has been done or not
     :param image_id: the id number of the image to which the tag is to be assigned
     """
     __tablename__ = "notes"
     id = Column(Integer, primary_key=True)
-    description = Column(String(150), nullable=False)
+    note_description = Column(String(150), nullable=False)
     created_at = Column('created_at', DateTime, default=func.now())
     updated_at = Column('updated_at', DateTime, default=func.now())
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     done = Column(Boolean, default=False)
     image_id = Column(Integer, ForeignKey('images.id'))
 
@@ -83,11 +85,13 @@ class Note(Base):
 class Tag(Base):
     """Class which describes table in database of the User
     :param id:int: tag's unique id in DB
-    :param name: str: tag's name
+    :param tag_name: str: tag's name
+    :param user_id: int: Id number of the user who entered the tag into the DB
     """
     __tablename__ = "tags"
     id = Column(Integer, primary_key=True)
-    name = Column(String(25), nullable=False, unique=True)
+    tag_name = Column(String(25), nullable=False, unique=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
 
 
 Base.metadata.create_all(bind=engine)
