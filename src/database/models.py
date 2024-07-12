@@ -2,7 +2,7 @@ from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean
 from sqlalchemy.sql.schema import ForeignKey
 from sqlalchemy.sql.sqltypes import DateTime
 from sqlalchemy.orm import relationship, sessionmaker, Session
-from db import Base, engine, get_db
+from .db import Base, engine, get_db
 from datetime import datetime
 
 
@@ -20,7 +20,7 @@ class User(Base):
 
     """
     __tablename__ = "users"
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, autoincrement=True, primary_key=True)
     username = Column(String(150), nullable=False, unique=True)
     email = Column(String(150), nullable=False, unique=True)
     created_at = Column('crated_at', DateTime, default=func.now())
@@ -52,11 +52,11 @@ class Image(Base):
     :param note: the comment about the image which is putting in DB. Relation 'many to one' - many comments to one image.  
     """
     __tablename__ = "images"
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, autoincrement=True, primary_key=True, index=True)
     image_name = Column(String(50))
     image_link = Column(String(250))
-    created_at = Column(DateTime)
-    update_at = Column(DateTime)
+    created_at = Column(DateTime, default=func.now())
+    update_at = Column(DateTime, default=None, onupdate=func.now())
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     tags = relationship("Tag", secondary=image_m2m_tag, backref="images")
     note = relationship('Note', backref='images')
@@ -68,15 +68,16 @@ class Note(Base):
     :param description: str: comment of the image
     :param created_at: datetime: comment creation date
     :param updated_at: datetime: comment update date
+    :param user_id: int: Id number of the user who entered the note into the DB
     :param done: information whether comment has been done or not
     :param image_id: the id number of the image to which the tag is to be assigned
     """
     __tablename__ = "notes"
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, autoincrement=True, primary_key=True)
     description = Column(String(150), nullable=False)
     created_at = Column('created_at', DateTime, default=func.now())
-    updated_at = Column('updated_at', DateTime, default=func.now())
-    done = Column(Boolean, default=False)
+    updated_at = Column('updated_at', DateTime, default=None, onupdate=func.now())
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     image_id = Column(Integer, ForeignKey('images.id'))
 
 
@@ -84,10 +85,12 @@ class Tag(Base):
     """Class which describes table in database of the User
     :param id:int: tag's unique id in DB
     :param name: str: tag's name
+    :param user_id: int: Id number of the user who entered the tag into the DB
     """
     __tablename__ = "tags"
-    id = Column(Integer, primary_key=True)
-    name = Column(String(25), nullable=False, unique=True)
+    id = Column(Integer, autoincrement=True, primary_key=True)
+    tag_name = Column(String(25), nullable=False, unique=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
 
 
 Base.metadata.create_all(bind=engine)
