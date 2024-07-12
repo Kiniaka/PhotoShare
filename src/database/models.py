@@ -46,9 +46,9 @@ class Image(Base):
     :param image_name: str: name of the image which is putting in DB
     :param image_link: link to the image
     :param created_at: date: the date of the image creation - format: YYYY-MM-DD HH:MM:SS where Y-means year, M - means month, D- means day H - means hour, M - means minutes and S - means secunds
-    :param updated_at: date: the date of the image updating - format: YYYY-MM-DD HH:MM:SS where Y-means year, M - means month, D- means day H - means hour, M - means minutes and S - means secunds
+    :param update_at: date: the date of the image updating - format: YYYY-MM-DD HH:MM:SS where Y-means year, M - means month, D- means day H - means hour, M - means minutes and S - means secunds
     :param user_id: int: Id number of the user who entered the given person into the DB
-    :param tags: tags from about the image which is putting in DB. Relation 'mamy to many' - many tags to one images and one tag to many images.
+    :param tags: tags about the image which is putting in DB. Relation 'mamy to many' - many tags to one images and one tag to many images.
     :param note: the comment about the image which is putting in DB. Relation 'many to one' - many comments to one image.  
     """
     __tablename__ = "images"
@@ -65,11 +65,11 @@ class Image(Base):
 class Note(Base):
     """Class which describes table in database of the Comment
     :param id:int: note's unique id in DB
-    :param description: str: comment on the image
+    :param description: str: comment of the image
     :param created_at: datetime: comment creation date
     :param updated_at: datetime: comment update date
     :param done: information whether comment has been done or not
-
+    :param image_id: the id number of the image to which the tag is to be assigned
     """
     __tablename__ = "notes"
     id = Column(Integer, primary_key=True)
