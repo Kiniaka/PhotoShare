@@ -72,7 +72,7 @@ class TagModel(BaseModel):
     :param tag_name: str: tag name
     :param user_id: int: user id
     """
-    tag_name: str
+    tag_name: str = Field(details='tags names divided by space (" ")')
     user_id: int
 
 
@@ -120,7 +120,7 @@ class UserResponse(BaseModel):
     detail: str = 'User succesfully created'
 
 
-# '''------------------------Tags---------------------------'''
+# '''------------------------Tokens---------------------------'''
 
 
 class TokenModel(BaseModel):

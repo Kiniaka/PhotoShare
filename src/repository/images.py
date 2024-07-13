@@ -6,9 +6,10 @@ from sqlalchemy import extract, and_
 
 from src.database.models import Image, User, Tag
 from src.schemas import ImageModel
+from tags import create_tags
 
 async def get_images(skip: int, limit: int, db: Session) -> List[Image] | None:
-    """returns every image saved by current user
+    """returns every image saved in the database
 
     :param skip: how many images will be skipped
     :type skip: int
@@ -48,9 +49,8 @@ async def create_image(body: ImageModel, user: User, db: Session) -> Image:
     :return: Image that is being saved
     :rtype: Image
     """
-    tags = body.tags.split(',')
-    tags_final = [Tag(tag) for tag in tags]
-    image = Image(**body.dict(), tags=tags_final, user_id=user.id)
+    tags = await create_tags([tag for tag in body.tags.split(' ')])
+    image = Image(**body.dict(), tags=tags, user_id=user.id)
     db.add(image)
     db.commit()
     db.refresh(image)
@@ -74,9 +74,8 @@ async def update_image(image_id: int, body: ImageModel, user: User, db: Session)
     if image:
         image.image_name = body.image_name
         image.image_link = body.image_link
-        tags = body.tags.split(',')
-        tags_final = [Tag(tag) for tag in tags]
-        image.tags = tags_final
+        tags = await create_tags([tag for tag in body.tags.split(', ')])
+        image.tags = tags
         db.commit()
     return image
 

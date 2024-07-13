@@ -88,7 +88,7 @@ class Tag(Base):
     :param user_id: int: Id number of the user who entered the tag into the DB
     """
     __tablename__ = "tags"
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, autoincrement=True, primary_key=True)
     tag_name = Column(String(25), nullable=False, unique=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
 
