@@ -2,7 +2,7 @@ from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean
 from sqlalchemy.sql.schema import ForeignKey
 from sqlalchemy.sql.sqltypes import DateTime
 from sqlalchemy.orm import relationship, sessionmaker, Session
-from db import Base, engine, get_db
+from .db import Base, engine, get_db
 from datetime import datetime
 
 
@@ -69,7 +69,6 @@ class Note(Base):
     :param created_at: datetime: comment creation date
     :param updated_at: datetime: comment update date
     :param user_id: int: Id number of the user who entered the note into the DB
-    :param done: information whether comment has been done or not
     :param image_id: the id number of the image to which the note is to be assigned
     """
     __tablename__ = "notes"
@@ -85,7 +84,7 @@ class Note(Base):
 class Tag(Base):
     """Class which describes table in database of the User
     :param id:int: tag's unique id in DB
-    :param name: str: tag's name
+    :param tag_name: str: tag's name
     :param user_id: int: Id number of the user who entered the tag into the DB
     """
     __tablename__ = "tags"
