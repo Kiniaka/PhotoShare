@@ -70,7 +70,7 @@ class Note(Base):
     :param updated_at: datetime: comment update date
     :param user_id: int: Id number of the user who entered the note into the DB
     :param done: information whether comment has been done or not
-    :param image_id: the id number of the image to which the tag is to be assigned
+    :param image_id: the id number of the image to which the note is to be assigned
     """
     __tablename__ = "notes"
     id = Column(Integer, primary_key=True)
@@ -92,6 +92,18 @@ class Tag(Base):
     id = Column(Integer, primary_key=True)
     tag_name = Column(String(25), nullable=False, unique=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
+
+
+class Opinion(Base):
+    """Class which archives all opinion about images
+    :param id: int: opinion's unique id in DB
+    :param vote: int: number of stars which show how the image user loved to
+    :param image_id: image unique id in DB
+    """
+    __tablename__ = "opinions"
+    id = Column(Integer, primary_key=True)
+    vote = Column(Integer, nullable=False)
+    image_id = Column(Integer, ForeignKey('images.id'))
 
 
 Base.metadata.create_all(bind=engine)
