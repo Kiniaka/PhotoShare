@@ -1,12 +1,10 @@
 from typing import List
 from datetime import datetime, timedelta
-
 from sqlalchemy.orm import Session
 from sqlalchemy import extract, and_
-
 from src.database.models import Image, User, Tag
 from src.schemas import ImageModel
-from tags import create_tags
+from src.repository.tags import create_tags
 
 
 async def get_images(skip: int, limit: int, db: Session) -> List[Image] | None:
