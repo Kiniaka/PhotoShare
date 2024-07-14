@@ -114,7 +114,7 @@ class UserResponse(BaseModel):
     """
     User Respomse Model
     :param user: ??????
-    :param detal: str: infromation that the user has been created 
+    :param detail: str: infromation that the user has been created
     """
     user: UserDB
     detail: str = 'User succesfully created'

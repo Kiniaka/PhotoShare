@@ -135,11 +135,12 @@ class Auth:
                 raise credentials_exception
         except JWTError as e:
             raise credentials_exception from e
-        
+
         user = await repository_users.get_user_by_email(email, db)
         if user is None:
             raise credentials_exception
-        return user
+        token_payload = {"sub": user.email, "role": user.role}
+        return token_payload
 
     def create_email_token(self, data: dict) -> str:
         """
@@ -172,5 +173,6 @@ class Auth:
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="Invalid token for email verification",
             )
+
 
 auth_service: Auth = Auth()
