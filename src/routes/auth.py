@@ -4,8 +4,8 @@ from sqlalchemy.orm import Session
 from datetime import timedelta
 from src.schemas import TokenModel
 from src.services.auth import auth_service
+from src.services.user_service import create_user, get_user_by_email, confirm_user_email
 from src.database.db import get_db
-from src.repository import users as repository_users
 
 router = APIRouter()
 
@@ -26,7 +26,7 @@ async def login(email: str, password: str, db: Session = Depends(get_db)):
     Raises:
     - HTTPException: If authentication fails (status_code 401).
     """
-    user = await repository_users.authenticate_user(email, password, db)
+    user = await auth_service.authenticate_user(email, password, db)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -64,7 +64,7 @@ async def refresh_token(refresh_token_param: str = Depends(auth_service.oauth2_s
     """
     try:
         email = await auth_service.decode_refresh_token(refresh_token_param)
-        user = await repository_users.get_user_by_email(email, db)
+        user = await get_user_by_email(email, db)
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -104,7 +104,7 @@ async def register(email: str, username: str, password: str, db: Session = Depen
     Raises:
     - HTTPException: If user already registered (status_code 400).
     """
-    user = await repository_users.create_user(email, username, password, db)
+    user = await create_user(email, username, password, db)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -140,12 +140,12 @@ async def verify_email(token: str, db: Session = Depends(get_db)):
     - HTTPException: If user not found (status_code 404) or invalid token (status_code 422).
     """
     email = await auth_service.get_email_from_token(token)
-    user = await repository_users.get_user_by_email(email, db)
+    user = await get_user_by_email(email, db)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
         )
 
-    await repository_users.confirm_user_email(email, db)
+    await confirm_user_email(email, db)
     return {"detail": "Email verified"}

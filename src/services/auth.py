@@ -7,10 +7,9 @@ from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
-
 from src.database.db import get_db
-from src.repository import users as repository_users
 from dotenv import load_dotenv
+from src.database.models import User
 import os
 
 load_dotenv()
@@ -45,7 +44,6 @@ class Auth:
         :param password: Password to hash.
         :return: Hashed password.
         """
-
         return self.pwd_context.hash(password)
 
     async def create_access_token(
@@ -57,7 +55,6 @@ class Auth:
         :param expires_delta: Expiration time delta in seconds (optional).
         :return: Encoded access token.
         """
-
         to_encode = data.copy()
         if expires_delta:
             expire = datetime.utcnow() + timedelta(seconds=expires_delta)
@@ -68,7 +65,7 @@ class Auth:
         return encoded_access_token
 
     async def create_refresh_token(
-        self, data: dict, expires_delta: Optional[float] = None
+            self, data: dict, expires_delta: Optional[float] = None
     ) -> str:
         """
         Creates a refresh token based on the provided data.
@@ -76,7 +73,6 @@ class Auth:
         :param expires_delta: Expiration time delta in seconds (optional).
         :return: Encoded refresh token.
         """
-
         to_encode = data.copy()
         if expires_delta:
             expire = datetime.utcnow() + timedelta(seconds=expires_delta)
@@ -86,74 +82,30 @@ class Auth:
         encoded_refresh_token: str = jwt.encode(to_encode, self.SECRET_KEY, self.ALGORITHM)
         return encoded_refresh_token
 
-    async def decode_refresh_token(self, refresh_token: str) -> str:
+    async def decode_refresh_token(self, token: str) -> str:
         """
         Decodes the refresh token to retrieve the email associated with it.
-        :param refresh_token: Refresh token to decode.
+        :param token: Refresh token to decode.
         :return: Decoded email from the token.
         :raises HTTPException 401: If the token is invalid or has an incorrect scope.
         """
-
         try:
-            payload = jwt.decode(refresh_token, self.SECRET_KEY, self.ALGORITHM)
-            if payload["scope"] == "refresh_token":
-                email = payload["sub"]
-                return email
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid scope for token"
-            )
-        except JWTError:
+            payload = jwt.decode(token, self.SECRET_KEY, algorithms=[self.ALGORITHM])
+            return payload.get("sub")
+        except JWTError as e:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Could not validate credentials",
-            )
+            ) from e
 
-    async def get_current_user(
-        self, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
-    ) -> Session:
+    @staticmethod
+    async def authenticate_user(email: str, password: str, db: Session = Depends(get_db)) -> Optional[User]:
         """
-        Retrieves the current authenticated user based on the provided access token.
-        :param token: Access token for authentication (dependency).
-        :param db: Database session (dependency).
-        :return: Current authenticated user session.
-        :raises HTTPException 401: If credentials cannot be validated or user does not exist.
+        Authenticates a user based on email and password.
         """
-
-        credentials_exception = HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-        try:
-            payload = jwt.decode(token, self.SECRET_KEY, algorithms=[self.ALGORITHM])
-            if payload["scope"] == "access_token":
-                email = payload["sub"]
-                if email is None:
-                    raise credentials_exception
-            else:
-                raise credentials_exception
-        except JWTError as e:
-            raise credentials_exception from e
-
-        user = await repository_users.get_user_by_email(email, db)
-        if user is None:
-            raise credentials_exception
-        token_payload = {"sub": user.email, "role": user.role}
-        return token_payload
-
-    def create_email_token(self, data: dict) -> str:
-        """
-        Creates an email verification token.
-        :param data: Data to encode into the token.
-        :return: Encoded email verification token.
-        """
-
-        to_encode = data.copy()
-        expire = datetime.utcnow() + timedelta(days=7)
-        to_encode.update({"iat": datetime.utcnow(), "exp": expire})
-        token: str = jwt.encode(to_encode, self.SECRET_KEY, algorithm=self.ALGORITHM)
-        return token
+        from src.services.user_service import authenticate_user
+        user = authenticate_user(email, password, db)
+        return user
 
     async def get_email_from_token(self, token: str) -> str:
         """
@@ -165,14 +117,12 @@ class Auth:
 
         try:
             payload = jwt.decode(token, self.SECRET_KEY, algorithms=[self.ALGORITHM])
-            email = payload["sub"]
-            return email
+            return payload.get("sub")
         except JWTError as e:
-            print(e)
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="Invalid token for email verification",
-            )
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Could not validate credentials",
+            ) from e
 
 
-auth_service: Auth = Auth()
+auth_service = Auth()
