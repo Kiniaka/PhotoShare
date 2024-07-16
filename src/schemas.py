@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import List, Optional
 from pydantic import BaseModel, Field, EmailStr
 
+
 # '''------------------------Images-------------------------'''
 
 
@@ -44,7 +45,6 @@ class ImageInDB(ImageModel):
 
 # '''------------------------Notes--------------------------'''
 
-
 class NoteModel(BaseModel):
     """
     Note Model
@@ -55,12 +55,26 @@ class NoteModel(BaseModel):
     image_id: int
 
 
-class NoteUpdate(NoteModel):
+class NoteUpdate(BaseModel):
     """
-    Note Update Model 
+    Note Update Model
     :param updated_at: datetime: image update time and date
     """
+    note_description: str
     updated_at: datetime
+
+    class Config:
+        orm_mode = True
+
+
+class NoteCreate(BaseModel):
+    """Schema for creating a new note."""
+
+    note_description: str
+
+    class Config:
+        """Pydantic model configuration."""
+        orm_mode = True
 
 
 # '''------------------------Tags---------------------------'''
@@ -83,7 +97,7 @@ class UserModel(BaseModel):
     """
     User Model
     :param username: str: user name
-    :param email: user mail adress
+    :param email: user mail address
     :param password: str: user password
     """
     username: str = Field(min_length=5, max_length=20)
@@ -95,8 +109,8 @@ class UserDB(UserModel):
     """
     User Model in DB ?????????????????????????????????????????????????????????????????????
     :param id: int: user id
-    :param username: str: user name
-    :param email: user mail adress
+    :param username: str: username
+    :param email: user mail address
     :param password: str: user password
     :param avatar: str: link to user avatar
     """
@@ -112,12 +126,12 @@ class UserDB(UserModel):
 
 class UserResponse(BaseModel):
     """
-    User Respomse Model
+    User Response Model
     :param user: ??????
-    :param detail: str: infromation that the user has been created
+    :param detail: str: information that the user has been created
     """
     user: UserDB
-    detail: str = 'User succesfully created'
+    detail: str = 'User successfully created'
 
 
 # '''------------------------Tokens---------------------------'''
