@@ -48,7 +48,8 @@ async def create_image(body: ImageModel, user: User, db: Session) -> Image:
     :return: Created image
     :rtype: Image
     """
-    tags = await create_tags(body.tags) if body.tags else []
+
+    tags = await create_tags(body.tags, db) if body.tags else []
     image = Image(**body.dict(), tags=tags, user_id=user.id)
     db.add(image)
     db.commit()
@@ -75,7 +76,7 @@ async def update_image(image_id: int, body: ImageModel, user: User, db: Session)
     if image:
         image.image_name = body.image_name
         image.image_link = body.image_link
-        tags = await create_tags(body.tags) if body.tags else []
+        tags = await create_tags(body.tags, db) if body.tags else []
         image.tags = tags
         db.commit()
         db.refresh(image)

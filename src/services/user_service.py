@@ -9,23 +9,18 @@ def create_user(email: str, username: str, password: str, db: Session) -> Option
     """
     Creates a new user record in the database.
     """
+    # Determine user role based on existing users
     if not db.query(User).first():
-        role = "admin"
+        role = "administrator"
     else:
         role = "user"
+
     hashed_password = auth_service.get_password_hash(password)
     new_user = User(email=email, username=username, password=hashed_password, role=role)
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
     return new_user
-
-
-def get_user_by_email(email: str, db: Session) -> Optional[User]:
-    """
-    Retrieves a user record from the database based on email address.
-    """
-    return db.query(User).filter(User.email == email).first()
 
 
 async def update_user(user_id: int, username: str, email: str, password: str, db: Session) -> Optional[User]:
@@ -54,6 +49,11 @@ def delete_user(user_id: int, db: Session):
     if user_to_delete:
         db.delete(user_to_delete)
         db.commit()
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
 
 
 def authenticate_user(email: str, password: str, db: Session) -> Optional[User]:
@@ -81,3 +81,10 @@ def confirm_user_email(email: str, db: Session) -> None:
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
         )
+
+
+def get_user_by_email(email: str, db: Session) -> Optional[User]:
+    """
+    Retrieves a user record from the database based on email address.
+    """
+    return db.query(User).filter(User.email == email).first()

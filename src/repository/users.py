@@ -6,7 +6,7 @@ from fastapi import HTTPException, status, Depends
 from src.services.auth import Auth
 
 
-def create_user(email: str, username: str, password: str, db: Session) -> User:
+async def create_user(email: str, username: str, password: str, db: Session) -> User:
     """
     Creates a new user record in the database.
     :param email: User's email address.
@@ -22,8 +22,8 @@ def create_user(email: str, username: str, password: str, db: Session) -> User:
 
     new_user = User(email=email, username=username, password=password, role=role)
     db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+    await db.commit()
+    await db.refresh(new_user)
     return new_user
 
 
@@ -65,19 +65,19 @@ async def update_user(user_id: int, username: str, email: str, password: str, db
     return user_to_update
 
 
-def delete_user(user_id: int, db: Session):
+async def delete_user(user_id: int, db: Session):
     """
     Deletes an existing user record from the database.
     :param user_id: ID of the user to be deleted.
     :param db: Database session dependency.
     """
-    user_to_delete = db.query(User).filter(User.id == user_id).first()
+    user_to_delete = await db.query(User).filter(User.id == user_id).first()
     if user_to_delete:
         db.delete(user_to_delete)
-        db.commit()
+        await db.commit()
 
 
-def authenticate_user(email: str, password: str, db: Session) -> Optional[User]:
+async def authenticate_user(email: str, password: str, db: Session) -> Optional[User]:
     """
     Authenticates a user by checking the provided email and password.
     :param email: Email of the user.
@@ -91,19 +91,19 @@ def authenticate_user(email: str, password: str, db: Session) -> Optional[User]:
     return user
 
 
-def confirm_user_email(email: str, db: Session) -> None:
+async def confirm_user_email(email: str, db: Session) -> None:
     """
     Confirms the user's email (assuming some logic for email confirmation).
     :param email: Email of the user to confirm.
     :param db: Database session dependency.
     :return: None
     """
-    user = db.query(User).filter(User.email == email).first()
+    user = await db.query(User).filter(User.email == email).first()
 
     if user:
         user.email_confirmed = True
 
-        db.commit()
+        await db.commit()
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -174,6 +174,6 @@ def get_current_active_user(current_user: User = Depends(Auth().get_current_user
     :param current_user: Current authenticated user.
     :return: Current active user object.
     """
-    if current_user.role != "admin":
+    if current_user.role not in ["admin", "moderator", "user"]:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions")
     return current_user

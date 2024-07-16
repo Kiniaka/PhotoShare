@@ -1,6 +1,4 @@
 from typing import Optional
-import redis.asyncio as redis
-
 from jose import JWTError, jwt
 from fastapi import HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordBearer
@@ -25,21 +23,17 @@ class Auth:
     SECRET_KEY: str = os.getenv('SECRET_KEY')
     ALGORITHM: str = os.getenv("ALGORITHM")
     oauth2_scheme: OAuth2PasswordBearer = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
-    r: redis.Redis = redis.Redis(
-        host=os.getenv("REDIS_HOST"), port=os.getenv("REDIS_PORT"), db=0
-    )
 
-    def verify_password(self, plain_pass: str, hash_pass: str) -> bool:
+    async def verify_password(self, plain_pass: str, hash_pass: str) -> bool:
         """
         Verifies if the plain password matches the hashed password.
         :param plain_pass: Plain password to verify.
         :param hash_pass: Hashed password to compare against.
         :return: True if the passwords match, False otherwise.
         """
-
         return self.pwd_context.verify(plain_pass, hash_pass)
 
-    def get_password_hash(self, password: str) -> str:
+    async def get_password_hash(self, password: str) -> str:
         """
         Hashes the provided password.
         :param password: Password to hash.
@@ -104,13 +98,12 @@ class Auth:
         """
         Authenticates a user based on email and password.
         """
-        from src.services.user_service import authenticate_user
-        user = authenticate_user(email, password, db)
+        user = await repository_users.authenticate_user(email, password, db)
         return user
 
     async def get_current_user(
-        self, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
-    ) -> Session:
+            self, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
+    ) -> User:
         """
         Retrieves the current authenticated user based on the provided access token.
         :param token: Access token for authentication (dependency).

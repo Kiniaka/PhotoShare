@@ -10,12 +10,14 @@ from src.repository import images as repository_images
 from src.routes.auth import auth_service
 from src.database.models import User
 
-router = APIRouter(prefix='/contacts', tags=['contacts'])
+router = APIRouter(prefix='/images', tags=['images'])
 
-@router.get('/', response_model=List[ImageInDB], description='No more than 10 requests pre minute',
+
+@router.get('/', response_model=List[ImageInDB], summary='Retrieve images with rate limiting',
+            description='No more than 10 requests per minute',
             dependencies=[Depends(RateLimiter(times=10, seconds=60))])
 async def read_images(skip: int = 0, limit: int = 5, db: Session = Depends(get_db),
-                       current_user: User = Depends(auth_service.get_current_user)):
+                      current_user: User = Depends(auth_service.get_current_user)):
     """
     Retrieve images with rate limiting (10 requests per minute).
 
@@ -31,35 +33,48 @@ async def read_images(skip: int = 0, limit: int = 5, db: Session = Depends(get_d
     :return: List of images.
     :rtype: List[ImageInDB]
     """
-    images = await repository_images.get_images(skip, limit, current_user, db)
-    return images
+    images = await repository_images.get_images(skip, limit, db)
+    filtered_images = [image for image in images if image.user_id == current_user.id]
 
-@router.get('/{image_id}', response_model=ImageInDB, description='No more than 10 requests per minute',
+    if not filtered_images:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='No images found')
+
+    return filtered_images
+
+
+@router.get('/{image_id}', response_model=ImageInDB, summary='Retrieve a single image with rate limiting',
+            description='No more than 10 requests per minute',
             dependencies=[Depends(RateLimiter(times=10, seconds=60))])
 async def read_image(image_id: int, db: Session = Depends(get_db),
-                       current_user: User = Depends(auth_service.get_current_user)):
+                     current_user: User = Depends(auth_service.get_current_user)):
     """
-    Retrieve a image by ID with rate limiting (10 requests per minute).
+    Retrieve an image by ID with rate limiting (10 requests per minute).
 
-    :param image_id: The ID of the contact to retrieve.
+    :param image_id: The ID of the image to retrieve.
     :type image_id: int
     :param db: The database session.
     :type db: Session
     :param current_user: The current authenticated user.
     :type current_user: User
-    :raises HTTPException 404: If image not found.
+    :raises HTTPException 404: If image not found or if the image does not belong to the current user.
     :return: Retrieved image.
     :rtype: ImageInDB
     """
-    image = await repository_images.get_contact(image_id, current_user, db)
+    image = await repository_images.get_image(image_id, db)
     if image is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Contact not found')
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Image not found')
+
+    # Check if the retrieved image belongs to the current user
+    if image.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='You do not have permission to access this image')
+
     return image
 
 
-@router.post('/', response_model=ImageInDB, description='No more than 10 requests pre minute',
-            dependencies=[Depends(RateLimiter(times=10, seconds=60))])
-async def create_contact(body: ImageModel, db: Session = Depends(get_db),
+@router.post('/', response_model=ImageInDB, summary='Create a new image with rate limiting',
+             description='No more than 10 requests per minute',
+             dependencies=[Depends(RateLimiter(times=10, seconds=60))])
+async def create_image(body: ImageModel, db: Session = Depends(get_db),
                        current_user: User = Depends(auth_service.get_current_user)):
     """
     Create a new image with rate limiting (10 requests per minute).
@@ -75,14 +90,16 @@ async def create_contact(body: ImageModel, db: Session = Depends(get_db),
     """
     return await repository_images.create_image(body, current_user, db)
 
-@router.put('/{image_id}', response_model=ImageInDB, description='No more than 10 requests pre minute',
+
+@router.put('/{image_id}', response_model=ImageInDB, summary='Update an image with rate limiting',
+            description='No more than 10 requests per minute',
             dependencies=[Depends(RateLimiter(times=10, seconds=60))])
-async def update_image(body: ImageModel, image_id: int, db: Session = Depends(get_db),
+async def update_image(image_id: int, body: ImageModel, db: Session = Depends(get_db),
                        current_user: User = Depends(auth_service.get_current_user)):
     """
-    Update a contact by ID with rate limiting (10 requests per minute).
+    Update an image by ID with rate limiting (10 requests per minute).
 
-    :param image_id: The ID of the contact to update.
+    :param image_id: The ID of the image to update.
     :type image_id: int
     :param body: The updated image details.
     :type body: ImageModel
@@ -94,20 +111,21 @@ async def update_image(body: ImageModel, image_id: int, db: Session = Depends(ge
     :return: Updated image.
     :rtype: ImageInDB
     """
-    contact = await repository_images.update_contact(image_id, body, current_user, db)
-    if contact is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Image not found")
-    return contact
+    image = await repository_images.update_image(image_id, body, current_user, db)
+    if image is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Image not found')
+    return image
 
 
-@router.delete('{image_id}', response_model=ImageInDB, description='No more than 10 requests pre minute',
-            dependencies=[Depends(RateLimiter(times=10, seconds=60))])
-async def remove_image(image_id: int, db: Session = Depends(get_db),
+@router.delete('/{image_id}', response_model=ImageInDB, summary='Delete an image with rate limiting',
+               description='No more than 10 requests per minute',
+               dependencies=[Depends(RateLimiter(times=10, seconds=60))])
+async def delete_image(image_id: int, db: Session = Depends(get_db),
                        current_user: User = Depends(auth_service.get_current_user)):
     """
-    Delete a contact by ID with rate limiting (10 requests per minute).
+    Delete an image by ID with rate limiting (10 requests per minute).
 
-    :param image_id: The ID of the contact to delete.
+    :param image_id: The ID of the image to delete.
     :type image_id: int
     :param db: The database session.
     :type db: Session
@@ -119,5 +137,5 @@ async def remove_image(image_id: int, db: Session = Depends(get_db),
     """
     image = await repository_images.remove_image(image_id, current_user, db)
     if image is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Image not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Image not found')
     return image
