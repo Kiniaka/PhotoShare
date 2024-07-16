@@ -11,6 +11,7 @@ from src.database.db import get_db
 from dotenv import load_dotenv
 from src.database.models import User
 import os
+from src.repository import users as repository_users
 
 load_dotenv()
 
@@ -47,7 +48,7 @@ class Auth:
         return self.pwd_context.hash(password)
 
     async def create_access_token(
-        self, data: dict, expires_delta: Optional[float] = None
+            self, data: dict, expires_delta: Optional[float] = None
     ) -> str:
         """
         Creates an access token based on the provided data.
@@ -105,6 +106,39 @@ class Auth:
         """
         from src.services.user_service import authenticate_user
         user = authenticate_user(email, password, db)
+        return user
+
+    async def get_current_user(
+        self, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
+    ) -> Session:
+        """
+        Retrieves the current authenticated user based on the provided access token.
+        :param token: Access token for authentication (dependency).
+        :param db: Database session (dependency).
+        :return: Current authenticated user session.
+        :raises HTTPException 401: If credentials cannot be validated or user does not exist.
+        """
+
+        credentials_exception = HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+        try:
+            payload = jwt.decode(token, self.SECRET_KEY, algorithms=[self.ALGORITHM])
+            if payload["scope"] == "access_token":
+                email = payload["sub"]
+                if email is None:
+                    raise credentials_exception
+            else:
+                raise credentials_exception
+        except JWTError as e:
+            raise credentials_exception from e
+
+        user = await repository_users.get_user_by_email(email, db)
+        if user is None:
+            raise credentials_exception
         return user
 
     async def get_email_from_token(self, token: str) -> str:

@@ -27,6 +27,10 @@ def create_user(email: str, username: str, password: str, db: Session) -> User:
     return new_user
 
 
+def get_user_by_username(db: Session, username: str):
+    return db.query(User).filter(User.username == username).first()
+
+
 def get_user_by_email(email: str, db: Session) -> Optional[User]:
     """
     Retrieves a user record from the database based on email address.
