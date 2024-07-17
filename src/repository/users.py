@@ -1,7 +1,6 @@
 from typing import Optional
 from sqlalchemy.orm import Session
 from src.database.models import User
-from src.services.auth import auth_service
 from fastapi import HTTPException, status, Depends
 from src.services.auth import Auth
 
@@ -20,7 +19,8 @@ async def create_user(email: str, username: str, password: str, db: Session) -> 
     else:
         role = "user"
 
-    new_user = User(email=email, username=username, password=password, role=role)
+    new_user = User(email=email, username=username,
+                    password=password, role=role)
     db.add(new_user)
     await db.commit()
     await db.refresh(new_user)
@@ -86,7 +86,7 @@ async def authenticate_user(email: str, password: str, db: Session) -> Optional[
     :return: User object if authentication succeeds, None otherwise.
     """
     user = db.query(User).filter(User.email == email).first()
-    if not user or not auth_service.verify_password(password, user.password):
+    if not user or not Auth().verify_password(password, user.password):
         return None
     return user
 
@@ -175,5 +175,6 @@ def get_current_active_user(current_user: User = Depends(Auth().get_current_user
     :return: Current active user object.
     """
     if current_user.role not in ["admin", "moderator", "user"]:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Insufficient permissions")
     return current_user
