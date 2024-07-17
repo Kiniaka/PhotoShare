@@ -1,8 +1,6 @@
 from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, ForeignKey, Table, func
 from sqlalchemy.orm import relationship, declarative_base
-
-Base = declarative_base()
-engine = create_engine("postgresql+psycopg2://postgres:password@localhost:5432/postgres")
+from src.database.db import Base, engine
 
 
 class User(Base):
