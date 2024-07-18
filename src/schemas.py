@@ -44,7 +44,7 @@ class ImageInDB(ImageModel):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # '''------------------------Notes--------------------------'''
@@ -68,7 +68,7 @@ class NoteUpdate(BaseModel):
     updated_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class NoteCreate(BaseModel):
@@ -79,7 +79,7 @@ class NoteCreate(BaseModel):
 
     class Config:
         """Pydantic model configuration."""
-        orm_mode = True
+        from_attributes = True
 
 
 # '''------------------------Tags---------------------------'''
@@ -126,7 +126,7 @@ class UserDB(UserModel):
     avatar: Optional[str]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class UserResponse(BaseModel):
