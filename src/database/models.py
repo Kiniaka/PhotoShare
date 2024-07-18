@@ -1,6 +1,8 @@
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, ForeignKey, Table, func
-from sqlalchemy.orm import relationship, declarative_base
-from src.database.db import Base, engine
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, func, Table
+from sqlalchemy.sql.schema import ForeignKey
+from sqlalchemy.sql.sqltypes import DateTime
+from sqlalchemy.orm import relationship
+from src.database.db import Base, engine, get_db
 
 
 class User(Base):
@@ -14,7 +16,6 @@ class User(Base):
     :param refresh_token: str: refresh_token
     :param mail_confirmed: boolean: information if the mail of the user is confirmed by mail
     :param role: str: user role: admin, moderator or standard user
-
     """
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
@@ -35,9 +36,9 @@ class User(Base):
 image_m2m_tag = Table(
     "image_m2m_tag",
     Base.metadata,
-    Column("id", Integer, primary_key=True, index=True),
+    Column("id", Integer, primary_key=True),
     Column("image_id", Integer, ForeignKey("images.id", ondelete="CASCADE")),
-    Column("tag_id", Integer, ForeignKey("tags.id", ondelete="CASCADE")),
+    Column("tag_id", Integer, ForeignKey("tags.id", ondelete="CASCADE"))
 )
 
 
@@ -65,16 +66,13 @@ class Image(Base):
 
 
 class Note(Base):
-    """
-    Class representing a note in the database.
-
-    Attributes:
-        id (int): Note's unique identifier in the database.
-        note_description (str): Comment of the image.
-        created_at (datetime): Note creation date.
-        updated_at (datetime): Note update date.
-        user_id (int): ID number of the user who entered the note into the DB.
-        image_id (int): ID number of the image to which the note is assigned.
+    """Class which describes table in database of the Comment
+    :param id:int: note's unique id in DB
+    :param note_description: str: comment of the image
+    :param created_at: datetime: comment creation date
+    :param updated_at: datetime: comment update date
+    :param user_id: int: Id number of the user who entered the note into the DB
+    :param image_id: the id number of the image to which the tag is to be assigned
     """
 
     __tablename__ = "notes"
