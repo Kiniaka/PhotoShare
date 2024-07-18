@@ -19,10 +19,12 @@ class Auth:
     Handles authentication operations such as password hashing, token creation, and verification.
     """
 
-    pwd_context: CryptContext = CryptContext(schemes=["bcrypt"], deprecated="auto")
+    pwd_context: CryptContext = CryptContext(
+        schemes=["bcrypt"], deprecated="auto")
     SECRET_KEY: str = os.getenv('SECRET_KEY')
     ALGORITHM: str = os.getenv("ALGORITHM")
-    oauth2_scheme: OAuth2PasswordBearer = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+    oauth2_scheme: OAuth2PasswordBearer = OAuth2PasswordBearer(
+        tokenUrl="/api/auth/login")
 
     async def verify_password(self, plain_pass: str, hash_pass: str) -> bool:
         """
@@ -55,8 +57,10 @@ class Auth:
             expire = datetime.utcnow() + timedelta(seconds=expires_delta)
         else:
             expire = datetime.utcnow() + timedelta(minutes=15)
-        to_encode.update({"iat": datetime.utcnow(), "exp": expire, "scope": "access_token"})
-        encoded_access_token: str = jwt.encode(to_encode, self.SECRET_KEY, self.ALGORITHM)
+        to_encode.update(
+            {"iat": datetime.utcnow(), "exp": expire, "scope": "access_token"})
+        encoded_access_token: str = jwt.encode(
+            to_encode, self.SECRET_KEY, self.ALGORITHM)
         return encoded_access_token
 
     async def create_refresh_token(
@@ -73,8 +77,10 @@ class Auth:
             expire = datetime.utcnow() + timedelta(seconds=expires_delta)
         else:
             expire = datetime.utcnow() + timedelta(minutes=15)
-        to_encode.update({"iat": datetime.utcnow(), "exp": expire, "scope": "refresh_token"})
-        encoded_refresh_token: str = jwt.encode(to_encode, self.SECRET_KEY, self.ALGORITHM)
+        to_encode.update(
+            {"iat": datetime.utcnow(), "exp": expire, "scope": "refresh_token"})
+        encoded_refresh_token: str = jwt.encode(
+            to_encode, self.SECRET_KEY, self.ALGORITHM)
         return encoded_refresh_token
 
     async def decode_refresh_token(self, token: str) -> str:
@@ -85,7 +91,8 @@ class Auth:
         :raises HTTPException 401: If the token is invalid or has an incorrect scope.
         """
         try:
-            payload = jwt.decode(token, self.SECRET_KEY, algorithms=[self.ALGORITHM])
+            payload = jwt.decode(token, self.SECRET_KEY,
+                                 algorithms=[self.ALGORITHM])
             return payload.get("sub")
         except JWTError as e:
             raise HTTPException(
@@ -119,7 +126,8 @@ class Auth:
         )
 
         try:
-            payload = jwt.decode(token, self.SECRET_KEY, algorithms=[self.ALGORITHM])
+            payload = jwt.decode(token, self.SECRET_KEY,
+                                 algorithms=[self.ALGORITHM])
             if payload["scope"] == "access_token":
                 email = payload["sub"]
                 if email is None:
@@ -143,7 +151,8 @@ class Auth:
         """
 
         try:
-            payload = jwt.decode(token, self.SECRET_KEY, algorithms=[self.ALGORITHM])
+            payload = jwt.decode(token, self.SECRET_KEY,
+                                 algorithms=[self.ALGORITHM])
             return payload.get("sub")
         except JWTError as e:
             raise HTTPException(

@@ -16,7 +16,8 @@ def create_user(email: str, username: str, password: str, db: Session) -> Option
         role = "user"
 
     hashed_password = auth_service.get_password_hash(password)
-    new_user = User(email=email, username=username, password=hashed_password, role=role)
+    new_user = User(email=email, username=username,
+                    password=hashed_password, role=role)
     db.add(new_user)
     db.commit()
     db.refresh(new_user)

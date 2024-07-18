@@ -34,10 +34,12 @@ async def read_images(skip: int = 0, limit: int = 5, db: Session = Depends(get_d
     :rtype: List[ImageInDB]
     """
     images = await repository_images.get_images(skip, limit, db)
-    filtered_images = [image for image in images if image.user_id == current_user.id]
+    filtered_images = [
+        image for image in images if image.user_id == current_user.id]
 
     if not filtered_images:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='No images found')
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail='No images found')
 
     return filtered_images
 
@@ -62,11 +64,13 @@ async def read_image(image_id: int, db: Session = Depends(get_db),
     """
     image = await repository_images.get_image(image_id, db)
     if image is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Image not found')
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail='Image not found')
 
     # Check if the retrieved image belongs to the current user
     if image.user_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='You do not have permission to access this image')
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail='You do not have permission to access this image')
 
     return image
 
@@ -113,7 +117,8 @@ async def update_image(image_id: int, body: ImageModel, db: Session = Depends(ge
     """
     image = await repository_images.update_image(image_id, body, current_user, db)
     if image is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Image not found')
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail='Image not found')
     return image
 
 
@@ -137,5 +142,6 @@ async def delete_image(image_id: int, db: Session = Depends(get_db),
     """
     image = await repository_images.remove_image(image_id, current_user, db)
     if image is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Image not found')
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail='Image not found')
     return image

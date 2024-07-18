@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 from sqlalchemy.orm import Session
 from src.database.models import User
 from fastapi import HTTPException, status, Depends
@@ -178,3 +178,24 @@ def get_current_active_user(current_user: User = Depends(Auth().get_current_user
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="Insufficient permissions")
     return current_user
+
+
+def get_all_users(db: Session, skip: int = 0, limit: int = 10) -> List[User]:
+    """
+    Retrieves all user records from the database.
+    :param db: Database session dependency.
+    :param skip: Number of records to skip for pagination.
+    :param limit: Maximum number of records to retrieve.
+    :return: List of user objects.
+    """
+    return db.query(User).offset(skip).limit(limit).all()
+
+
+def get_user_by_id(db: Session, user_id: int) -> Optional[User]:
+    """
+    Retrieves a user record from the database based on user ID.
+    :param db: Database session dependency.
+    :param user_id: ID of the user to retrieve.
+    :return: User object if found, None if not found.
+    """
+    return db.query(User).filter(User.id == user_id).first()

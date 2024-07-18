@@ -34,8 +34,10 @@ async def login(email: str, password: str, db: Session = Depends(get_db)):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    access_token_expires = timedelta(minutes=int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 15)))
-    refresh_token_expires = timedelta(days=int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", 30)))
+    access_token_expires = timedelta(minutes=int(
+        os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 15)))
+    refresh_token_expires = timedelta(
+        days=int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", 30)))
 
     access_token = await auth_service.create_access_token(
         data={"sub": user.email, "role": user.role}, expires_delta=access_token_expires.total_seconds()
@@ -71,7 +73,8 @@ async def refresh_token(refresh_token_param: str = Depends(auth_service.oauth2_s
                 detail="User not found",
             )
 
-        access_token_expires = timedelta(minutes=int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 15)))
+        access_token_expires = timedelta(minutes=int(
+            os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 15)))
         access_token = await auth_service.create_access_token(
             data={"sub": user.email, "role": user.role}, expires_delta=access_token_expires.total_seconds()
         )
@@ -111,8 +114,10 @@ async def register(email: str, username: str, password: str, db: Session = Depen
             detail="User already registered",
         )
 
-    access_token_expires = timedelta(minutes=int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 15)))
-    refresh_token_expires = timedelta(days=int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", 30)))
+    access_token_expires = timedelta(minutes=int(
+        os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 15)))
+    refresh_token_expires = timedelta(
+        days=int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", 30)))
 
     access_token = await auth_service.create_access_token(
         data={"sub": user.email, "role": user.role}, expires_delta=access_token_expires.total_seconds()
