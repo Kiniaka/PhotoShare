@@ -4,8 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from src.database.db import get_db
-from src.schemas import UserModel, UserDB
-# from src.schemas import UserModel, UserUpdate, UserDB
+from src.schemas import UserModel, UserUpdate, UserDB
 from src.repository import users as repository_users
 from src.services.auth import auth_service
 from src.database.models import User
@@ -94,37 +93,37 @@ async def create_user(user_data: UserModel, db: Session = Depends(get_db)):
     return user
 
 
-# @router.put('/{user_id}', response_model=UserDB, summary='Update user by ID')
-# async def update_user(user_id: int, user_data: UserUpdate, db: Session = Depends(get_db),
-#                       current_user: User = Depends(auth_service.get_current_user)):
-#     """
-#     Update a user by ID.
+@router.put('/{user_id}', response_model=UserDB, summary='Update user by ID')
+async def update_user(user_id: int, user_data: UserUpdate, db: Session = Depends(get_db),
+                      current_user: User = Depends(auth_service.get_current_user)):
+    """
+    Update a user by ID.
 
-#     Args:
-#         user_id (int): The ID of the user to update.
-#         user_data (UserUpdate): The updated user data.
-#         db (Session): Database session.
-#         current_user (User): The current authenticated user.
+    Args:
+        user_id (int): The ID of the user to update.
+        user_data (UserUpdate): The updated user data.
+        db (Session): Database session.
+        current_user (User): The current authenticated user.
 
-#     Raises:
-#         HTTPException: If the current user does not have admin permissions and is not the requested user.
-#         HTTPException: If the user with the specified ID is not found.
+    Raises:
+        HTTPException: If the current user does not have admin permissions and is not the requested user.
+        HTTPException: If the user with the specified ID is not found.
 
-#     Returns:
-#         UserInDB: The updated user.
-#     """
-#     if current_user.role != 'admin' and current_user.id != user_id:
-#         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-#                             detail='You do not have permission to access this resource')
+    Returns:
+        UserInDB: The updated user.
+    """
+    if current_user.role != 'admin' and current_user.id != user_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail='You do not have permission to access this resource')
 
-#     hashed_password = auth_service.hash_password(
-#         user_data.password) if user_data.password else None
-#     user = await repository_users.update_user(user_id, user_data.username, user_data.email, hashed_password, db)
-#     if not user:
-#         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-#                             detail=f'User with id {user_id} not found')
+    hashed_password = auth_service.hash_password(
+        user_data.password) if user_data.password else None
+    user = await repository_users.update_user(user_id, user_data.username, user_data.email, hashed_password, db)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f'User with id {user_id} not found')
 
-#     return user
+    return user
 
 
 @router.delete('/{user_id}', response_model=UserDB, summary='Delete user by ID')

@@ -12,11 +12,13 @@ class ImageModel(BaseModel):
     :param image_name:str: image name
     :param image_link:str: link to the image
     :param user_id: int: user id whose create the picture
+    :param description: str: image description
     :param tags: tags 
     """
     image_name: str
     image_link: str
     user_id: int
+    description: Optional[str]
     tags: Optional[List[int]]
 
 
@@ -25,16 +27,18 @@ class ImageUpdate(BaseModel):
     Image Update Model
     :param image_name: str: image name
     :param image_link: str: link to the image
+    :param description: str: image description
     :param tags: str: tags
     """
     image_name: Optional[str]
     image_link: Optional[str]
+    description: Optional[str]
     tags: Optional[List[int]]
 
 
 class ImageInDB(ImageModel):
     """
-    Image Model in DB ?????????????????????????????????????????????????????????????????????????
+    Image Model in DB
     :param id: int: image id
     """
     id: int
@@ -71,6 +75,7 @@ class NoteCreate(BaseModel):
     """Schema for creating a new note."""
 
     note_description: str
+    image_id: int
 
     class Config:
         """Pydantic model configuration."""
@@ -107,7 +112,7 @@ class UserModel(BaseModel):
 
 class UserDB(UserModel):
     """
-    User Model in DB 
+    User Model in DB
     :param id: int: user id
     :param username: str: username
     :param email: user mail address
@@ -127,11 +132,17 @@ class UserDB(UserModel):
 class UserResponse(BaseModel):
     """
     User Response Model
-    :param user: body of the user from USerModel
+    :param user: UserDB: user data
     :param detail: str: information that the user has been created
     """
     user: UserDB
     detail: str = 'User successfully created'
+
+
+class UserUpdate(BaseModel):
+    email: Optional[EmailStr]
+    username: Optional[str]
+    password: Optional[str]
 
 
 # '''------------------------Tokens---------------------------'''

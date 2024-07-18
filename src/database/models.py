@@ -24,7 +24,7 @@ class User(Base):
     created_at = Column(DateTime, default=func.now())
     avatar = Column(String(255), nullable=True, default="test")
     password = Column(String(255), nullable=False)
-    refresh_token = Column(String(255), nullable=True)
+    refresh_token = Column(String(255), nullable=False, default=None)
     mail_confirmed = Column(Boolean, default=False)
     role = Column(String(50), nullable=False, default="user")
     images = relationship("Image", backref="user")
