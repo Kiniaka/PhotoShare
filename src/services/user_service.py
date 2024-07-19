@@ -11,7 +11,7 @@ def create_user(email: str, username: str, password: str, db: Session) -> Option
     """
     # Determine user role based on existing users
     if not db.query(User).first():
-        role = "administrator"
+        role = "admin"
     else:
         role = "user"
 
