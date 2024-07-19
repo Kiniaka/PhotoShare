@@ -13,7 +13,6 @@ class User(Base):
     :param created_at: datetime: the date of user creation
     :param avatar: str: link to the image of avatar in Cloudinary
     :param password: str: user password
-    :param refresh_token: str: refresh_token
     :param mail_confirmed: boolean: information if the mail of the user is confirmed by mail
     :param role: str: user role: admin, moderator or standard user
     """
@@ -24,7 +23,6 @@ class User(Base):
     created_at = Column(DateTime, default=func.now())
     avatar = Column(String(255), nullable=True, default="test")
     password = Column(String(255), nullable=False)
-    refresh_token = Column(String(255), nullable=False, default=None)
     mail_confirmed = Column(Boolean, default=False)
     role = Column(String(50), nullable=False, default="user")
     images = relationship("Image", backref="user")

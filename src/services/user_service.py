@@ -5,7 +5,7 @@ from src.services.auth import auth_service
 from fastapi import HTTPException, status
 
 
-def create_user(email: str, username: str, password: str, db: Session) -> Optional[User]:
+async def create_user(email: str, username: str, password: str, db: Session) -> Optional[User]:
     """
     Creates a new user record in the database.
     """
@@ -15,7 +15,7 @@ def create_user(email: str, username: str, password: str, db: Session) -> Option
     else:
         role = "user"
 
-    hashed_password = auth_service.get_password_hash(password)
+    hashed_password = await auth_service.get_password_hash(password)
     new_user = User(email=email, username=username,
                     password=hashed_password, role=role)
     db.add(new_user)
