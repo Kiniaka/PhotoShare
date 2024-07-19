@@ -11,7 +11,9 @@ from src.database.models import User
 import os
 from src.repository import users as repository_users
 
-load_dotenv()
+path = 'src/database/.env'
+
+load_dotenv(path)
 
 
 class Auth:

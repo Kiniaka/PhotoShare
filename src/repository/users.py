@@ -3,6 +3,14 @@ from sqlalchemy.orm import Session
 from src.database.models import User
 from fastapi import HTTPException, status, Depends
 # from src.services.auth import Auth
+from fastapi.security import OAuth2PasswordBearer
+from passlib.context import CryptContext
+import os
+from dotenv import load_dotenv
+
+path = 'src/database/.env'
+
+load_dotenv(path)
 
 
 async def create_user(email: str, username: str, password: str, db: Session) -> User:
@@ -77,7 +85,7 @@ async def delete_user(user_id: int, db: Session):
         await db.commit()
 
 
-async def authenticate_user(email: str, password: str, refresh_token: None, db: Session) -> Optional[User]:
+async def authenticate_user(email: str, password: str, db: Session) -> Optional[User]:
     """
     Authenticates a user by checking the provided email and password.
     :param email: Email of the user.
@@ -85,14 +93,21 @@ async def authenticate_user(email: str, password: str, refresh_token: None, db: 
     :param db: Database session dependency.
     :return: User object if authentication succeeds, None otherwise.
     """
+    pwd_context: CryptContext = CryptContext(
+        schemes=["bcrypt"], deprecated="auto")
+    SECRET_KEY: str = os.getenv('SECRET_KEY')
+    ALGORITHM: str = os.getenv("ALGORITHM")
+    oauth2_scheme: OAuth2PasswordBearer = OAuth2PasswordBearer(
+        tokenUrl="/api/auth/login")
+
     user = db.query(User).filter(User.email == email).first()
 
-    async def verify_password(self, plain_pass: str, hash_pass: str) -> bool:
-        verifed_password = self.pwd_context.verify(plain_pass, hash_pass)
+    async def verify_password(plain_pass: str, hash_pass: str) -> bool:
+        verifed_password = pwd_context.verify(plain_pass, hash_pass)
         return verifed_password
 
-    verify_password(password, user.password)
-    if not user or not verify_password == True:
+    verify_password(password, User.password)
+    if not user or not verify_password == False:
         return None
     return user
 
@@ -183,7 +198,7 @@ def get_current_active_user(db: Session, refresh_token: None) -> Optional[User]:
     """
 
     try:
-        user = db.query(User).filter(User.refresh_token != refresh_token)
+        user = db.query(User).filter(User.refresh_token != None)
         if User.refresh_token:
             current_user_admin = user.filter(User.role == 'admin').first
             current_user_moderator = user.filter(
