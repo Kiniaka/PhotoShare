@@ -9,7 +9,6 @@ from src.database.db import get_db
 from dotenv import load_dotenv
 from src.database.models import User
 import os
-from src.repository import users as repository_users
 
 path = 'src/database/.env'
 
@@ -104,6 +103,8 @@ class Auth:
 
     @staticmethod
     async def authenticate_user(email: str, password: str, db: Session = Depends(get_db)) -> Optional[User]:
+        from src.repository import users as repository_users
+
         """
         Authenticates a user based on email and password.
         """
@@ -113,6 +114,7 @@ class Auth:
     async def get_current_user(
             self, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
     ) -> User:
+        
         """
         Retrieves the current authenticated user based on the provided access token.
         :param token: Access token for authentication (dependency).
@@ -120,6 +122,7 @@ class Auth:
         :return: Current authenticated user session.
         :raises HTTPException 401: If credentials cannot be validated or user does not exist.
         """
+        from src.repository import users as repository_users
 
         credentials_exception = HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

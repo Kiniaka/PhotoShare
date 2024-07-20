@@ -1,8 +1,8 @@
+from src.services.auth import auth_service as auth
 from typing import Optional, List
 from sqlalchemy.orm import Session
 from src.database.models import User
 from fastapi import HTTPException, status, Depends
-# from src.services.auth import Auth
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
 import os
@@ -93,24 +93,10 @@ async def authenticate_user(email: str, password: str, db: Session) -> Optional[
     :param db: Database session dependency.
     :return: User object if authentication succeeds, None otherwise.
     """
-    pwd_context: CryptContext = CryptContext(
-        schemes=["bcrypt"], deprecated="auto")
-    SECRET_KEY: str = os.getenv('SECRET_KEY')
-    ALGORITHM: str = os.getenv("ALGORITHM")
-    oauth2_scheme: OAuth2PasswordBearer = OAuth2PasswordBearer(
-        tokenUrl="/api/auth/login")
-
     user = db.query(User).filter(User.email == email).first()
-
-    async def verify_password(plain_pass: str, hash_pass: str) -> bool:
-        verifed_password = pwd_context.verify(plain_pass, hash_pass)
-        return verifed_password
-
-    verify_password(password, User.password)
-    if not user or not verify_password == False:
+    if not user or not auth.verify_password(password, user.password):
         return None
     return user
-
 
 async def confirm_user_email(email: str, db: Session) -> None:
     """
@@ -188,32 +174,19 @@ async def promote_to_admin(user_id: int, db: Session) -> Optional[User]:
 
     return user_to_promote
 
+# ______________________PIERWOTNA FUNCKJA KTÓRA CYKLUJE IMPORTY_______________________________________________________________
 
-def get_current_active_user(db: Session, refresh_token: None) -> Optional[User]:
+
+def get_current_active_user(current_user: User = Depends(auth.get_current_user)):
     """
     Retrieves the current active user.
-    :param user: Current user with refresh_token not equil None.
     :param current_user: Current authenticated user.
     :return: Current active user object.
     """
-
-    try:
-        user = db.query(User).filter(User.refresh_token != None)
-        if User.refresh_token:
-            current_user_admin = user.filter(User.role == 'admin').first
-            current_user_moderator = user.filter(
-                User.role == 'moderator').first
-            current_user_user = user.filter(User.role == 'moderator').first
-            if user == current_user_admin or user == current_user_moderator or user == current_user_user:
-                current_user = user
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions")
-    except HTTPException:
+    if current_user.role not in ["admin", "moderator", "user"]:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="Insufficient permissions")
     return current_user
-
 
 def get_all_users(db: Session, skip: int = 0, limit: int = 10) -> List[User]:
     """
